@@ -4,11 +4,11 @@ import { ID, Query } from "node-appwrite";
 import { createAdminClient, createSessionClient } from "../appwrite";
 import { cookies } from "next/headers";
 import { encryptId, extractCustomerIdFromUrl, parseStringify } from "../utils";
-// import { CountryCode, ProcessorTokenCreateRequest, ProcessorTokenCreateRequestProcessorEnum, Products } from "plaid";
+import { addFundingSource, createDwollaCustomer } from "./dwolla.actions";
+import { CountryCode, ProcessorTokenCreateRequest, ProcessorTokenCreateRequestProcessorEnum, Products } from "plaid";
 
-// import { plaidClient } from '@/lib/plaid';
-// import { revalidatePath } from "next/cache";
-// import { addFundingSource, createDwollaCustomer } from "./dwolla.actions";
+import { plaidClient } from '@/lib/plaid';
+import { revalidatePath } from "next/cache";
 
 
 const {
@@ -68,14 +68,18 @@ export const signUp = async ({ password, ...userData }: SignUpParams) => {
       `${firstName} ${lastName}`
     );
 
-    if(!newUserAccount) throw new Error('Error creating user')
+    if(!newUserAccount) {
+      throw new Error('Error creating user')
+    }
 
     const dwollaCustomerUrl = await createDwollaCustomer({
       ...userData,
       type: 'personal'
     })
 
-    if(!dwollaCustomerUrl) throw new Error('Error creating Dwolla customer')
+    if(!dwollaCustomerUrl) {
+      throw new Error('Error creating Dwolla customer')
+    }
 
     const dwollaCustomerId = extractCustomerIdFromUrl(dwollaCustomerUrl);
 
@@ -221,7 +225,9 @@ export const exchangePublicToken = async ({
     });
     
     // If the funding source URL is not created, throw an error
-    if (!fundingSourceUrl) throw Error;
+    if (!fundingSourceUrl) {
+      throw Error;
+    }
 
     // Create a bank account using the user ID, item ID, account ID, access token, funding source URL, and shareableId ID
     await createBankAccount({
